@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+type pass >/dev/null 2>&1 || { echo >&2 'ERROR: Script requires "pass" binary.'; exit 1; }
+type restic >/dev/null 2>&1 || { echo >&2 'ERROR: Script requires "restic" binary.'; exit 1; }
+
+USAGE="USAGE: $0 [repo-name] <arg1> <arg1> … <argN>
+
+This helper script fetches the password and AWS credentials for a restic backup
+that is stored in an Amazon AWS bucket from the GNU password manager \"pass\".
+
+The first argument must be the name of the repo within pass assuming the
+following password layout:
+
+…
+├── restic
+│   ├── <repo-name>
+│   …
+…
+
+The encrypted value of restic/<repo-name> should contain the environment variables
+that are recognized by restic on the last four lines:
+
+  $ pass show restic/my-database
+  zahzaingohy7oozu1evoh6xeik6Zae9w
+
+  RESTIC_REPOSITORY=s3:s3.amazonaws.com/my-database-backup
+  RESTIC_PASSWORD=zahzaingohy7oozu1evoh6xeik6Zae9w
+  AWS_ACCESS_KEY_ID=…
+  AWS_SECRET_ACCESS_KEY=…
+
+Arguments:
+  [repo-name]
+  The name of the passwords within the password manager under the \"restic\" key
+
+  <arg1> <arg1> … <argN>
+  All other arguments are directly passed into restic.
+
+Example usage:
+  # Usage with single argument runs \"restic snapshots\" automatically
+  resty my-database
+
+  # List all snapshots explicitly
+  resty my-database snapshots
+
+  # Check the repository for errors
+  resty my-database check
+"
+
+if [[ "$#" -eq 0 ]]; then
+    echo -n "$USAGE" >&2
+    exit 1
+fi
+
+REPO=$1
+RESTIC_ARGS=${@:2}
+
+if [[ "$#" -eq 1 ]]; then
+    RESTIC_ARGS=('snapshots')
+fi
+
+set -e -o pipefail
+
+CREDENTIALS="$(pass show "restic/$REPO" | tail -n 4)"
+if [[ -z "$CREDENTIALS" ]]; then
+    echo -e "\n\e[1m\e[31mFailed to fetch password for \"$REPO\" from password store.\e[39m\e[0m" >&2
+    exit 1
+fi
+
+# Remove trailing newline character
+CREDENTIALS=$(printf "%s" "$CREDENTIALS")
+
+while read -r line; do
+    export "$line"
+done <<< "$CREDENTIALS"
+
+echo "restic $RESTIC_ARGS ($RESTIC_REPOSITORY)"
+restic "$RESTIC_ARGS"
+exit $?
