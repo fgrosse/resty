@@ -1,7 +1,4 @@
 <h1 align="center">Resty</h1>
-<p align="center">Restic + S3 + Pass = 💕</p>
-
----
 
 This helper script fetches the password and AWS credentials for a restic backup
 that is stored in an Amazon AWS bucket from the GNU password manager [pass][1].
