@@ -1,7 +1,7 @@
 <h1 align="center">Resty</h1>
 
-This helper script fetches the password and AWS credentials for a restic backup
-that is stored in an Amazon AWS bucket from the GNU password manager [pass][1].
+This helper script fetches the password and AWS credentials for a [restic] backup
+that is stored in an Amazon AWS bucket from the GNU password manager [pass].
 
 The first argument must be the name of the repo within pass assuming the
 following password layout:
@@ -40,4 +40,5 @@ resty my-database snapshots
 resty my-database check
 ```
 
-[1]: https://www.passwordstore.org/
+[pass]: https://www.passwordstore.org/
+[restic]: https://restic.net/
