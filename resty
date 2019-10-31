@@ -74,5 +74,5 @@ while read -r line; do
 done <<< "$CREDENTIALS"
 
 echo "restic $RESTIC_ARGS ($RESTIC_REPOSITORY)"
-restic "$RESTIC_ARGS"
+restic $RESTIC_ARGS
 exit $?
